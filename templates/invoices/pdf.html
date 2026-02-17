@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ invoice.invoice_number }} - GCS Proforma Invoice</title>
+    <style>
+        @page { size: A4; margin: 20mm; }
+        body { font-family: 'Helvetica Neue', Arial, sans-serif; font-size: 12px; color: #333; margin: 0; padding: 0; }
+        .header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 30px; border-bottom: 3px solid #2c3e50; padding-bottom: 15px; }
+        .company-name { font-size: 28px; font-weight: 700; color: #2c3e50; }
+        .company-subtitle { font-size: 11px; color: #777; }
+        .invoice-title { font-size: 24px; font-weight: 700; color: #2c3e50; text-align: right; text-transform: uppercase; }
+        .invoice-meta { text-align: right; margin-top: 5px; font-size: 11px; }
+        .section { margin-bottom: 20px; }
+        .section-title { font-size: 13px; font-weight: 700; color: #2c3e50; text-transform: uppercase; margin-bottom: 8px; border-bottom: 1px solid #ddd; padding-bottom: 4px; }
+        .client-info { line-height: 1.6; }
+        table.items { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+        table.items th { background-color: #2c3e50; color: white; padding: 8px 10px; text-align: left; font-size: 11px; text-transform: uppercase; }
+        table.items td { padding: 8px 10px; border-bottom: 1px solid #eee; }
+        table.items tr:nth-child(even) { background-color: #f9f9f9; }
+        .text-right { text-align: right; }
+        .totals { width: 300px; margin-left: auto; }
+        .totals td { padding: 5px 10px; }
+        .totals .total-row { font-size: 16px; font-weight: 700; color: #2c3e50; border-top: 2px solid #2c3e50; }
+        .terms { margin-top: 30px; padding: 15px; background-color: #f5f5f5; border-radius: 4px; font-size: 10px; line-height: 1.5; }
+        .terms h4 { font-size: 12px; margin-bottom: 8px; color: #2c3e50; }
+        .footer-note { margin-top: 20px; text-align: center; font-style: italic; color: #999; font-size: 10px; }
+        .two-col { display: flex; justify-content: space-between; }
+        .two-col > div { width: 48%; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div>
+            <div class="company-name">GCS</div>
+            <div class="company-subtitle">Global Commercial Services</div>
+        </div>
+        <div>
+            <div class="invoice-title">Proforma Invoice</div>
+            <div class="invoice-meta">
+                <strong>Invoice #:</strong> {{ invoice.invoice_number }}<br>
+                <strong>Date:</strong> {{ invoice.date_issued }}<br>
+                {% if invoice.valid_until %}<strong>Valid Until:</strong> {{ invoice.valid_until }}<br>{% endif %}
+                <strong>Status:</strong> {{ invoice.status }}
+            </div>
+        </div>
+    </div>
+
+    <div class="two-col section">
+        <div>
+            <div class="section-title">Bill To</div>
+            <div class="client-info">
+                <strong>{{ invoice.client.company_name }}</strong><br>
+                {% if invoice.client.address %}{{ invoice.client.address }}<br>{% endif %}
+                {% if invoice.client.city %}{{ invoice.client.city }}{% endif %}
+                {% if invoice.client.city and invoice.client.country %}, {% endif %}
+                {% if invoice.client.country %}{{ invoice.client.country }}{% endif %}
+                {% if invoice.client.city or invoice.client.country %}<br>{% endif %}
+                {% if invoice.client.email %}{{ invoice.client.email }}<br>{% endif %}
+                {% if invoice.client.phone %}{{ invoice.client.phone }}{% endif %}
+            </div>
+        </div>
+        <div>
+            <div class="section-title">From</div>
+            <div class="client-info">
+                <strong>GCS</strong><br>
+                Global Commercial Services<br>
+            </div>
+        </div>
+    </div>
+
+    <div class="section">
+        <table class="items">
+            <thead>
+                <tr>
+                    <th style="width:40px">#</th>
+                    <th>Description</th>
+                    <th class="text-right" style="width:80px">Qty</th>
+                    <th class="text-right" style="width:100px">Unit Price</th>
+                    <th class="text-right" style="width:100px">Total</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in invoice.items %}
+                <tr>
+                    <td>{{ loop.index }}</td>
+                    <td>{{ item.description }}</td>
+                    <td class="text-right">{{ item.quantity }}</td>
+                    <td class="text-right">{{ "%.2f"|format(item.unit_price) }}</td>
+                    <td class="text-right">{{ "%.2f"|format(item.total) }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <table class="totals">
+            <tr>
+                <td>Subtotal:</td>
+                <td class="text-right">{{ "%.2f"|format(invoice.subtotal) }}</td>
+            </tr>
+            <tr>
+                <td>Tax ({{ invoice.tax_rate }}%):</td>
+                <td class="text-right">{{ "%.2f"|format(invoice.tax_amount) }}</td>
+            </tr>
+            <tr class="total-row">
+                <td>Total:</td>
+                <td class="text-right">{{ "%.2f"|format(invoice.total) }}</td>
+            </tr>
+        </table>
+    </div>
+
+    {% if invoice.notes %}
+    <div class="section">
+        <div class="section-title">Notes</div>
+        <p>{{ invoice.notes }}</p>
+    </div>
+    {% endif %}
+
+    <div class="terms">
+        <h4>Terms &amp; Conditions</h4>
+        <ol>
+            <li>This proforma invoice is valid until the date specified above.</li>
+            <li>Payment terms are subject to mutual agreement upon acceptance.</li>
+            <li>Prices are quoted in the agreed currency and are subject to change after the validity period.</li>
+            <li>Goods/services will be delivered as per the agreed schedule upon confirmation of order.</li>
+            <li>Any disputes shall be resolved through mutual consultation.</li>
+        </ol>
+    </div>
+
+    <div class="footer-note">
+        This is a proforma invoice and not a demand for payment.
+    </div>
+</body>
+</html>
