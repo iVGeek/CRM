@@ -25,7 +25,7 @@ class Client(db.Model):
     address = db.Column(db.String(300))
     city = db.Column(db.String(100))
     country = db.Column(db.String(100))
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.utcnow())
     contacts = db.relationship('Contact', backref='client', lazy=True, cascade='all, delete-orphan')
     invoices = db.relationship('ProformaInvoice', backref='client', lazy=True)
 
@@ -51,7 +51,7 @@ class ProformaInvoice(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     invoice_number = db.Column(db.String(50), unique=True, nullable=False)
     client_id = db.Column(db.Integer, db.ForeignKey('client.id'), nullable=False)
-    date_issued = db.Column(db.Date, default=datetime.utcnow)
+    date_issued = db.Column(db.Date, default=lambda: datetime.utcnow().date())
     valid_until = db.Column(db.Date)
     status = db.Column(db.String(20), default='Draft')
     notes = db.Column(db.Text)
@@ -59,7 +59,7 @@ class ProformaInvoice(db.Model):
     tax_rate = db.Column(db.Float, default=16.0)
     tax_amount = db.Column(db.Float, default=0)
     total = db.Column(db.Float, default=0)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.utcnow())
     items = db.relationship('InvoiceItem', backref='invoice', lazy=True, cascade='all, delete-orphan')
 
 
