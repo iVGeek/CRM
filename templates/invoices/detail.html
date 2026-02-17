@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+{% block title %}{{ invoice.invoice_number }} - GCS CRM{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h1>{{ invoice.invoice_number }}</h1>
+    <div>
+        <a href="{{ url_for('invoice_pdf', id=invoice.id) }}" class="btn btn-success">Download PDF</a>
+        <a href="{{ url_for('invoice_edit', id=invoice.id) }}" class="btn btn-primary">Edit</a>
+        <form action="{{ url_for('invoice_delete', id=invoice.id) }}" method="POST" class="d-inline"
+              onsubmit="return confirm('Delete this invoice?');">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button class="btn btn-danger">Delete</button>
+        </form>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="card mb-4">
+            <div class="card-header"><h5 class="mb-0">Invoice Details</h5></div>
+            <div class="card-body">
+                <p><strong>Invoice Number:</strong> {{ invoice.invoice_number }}</p>
+                <p><strong>Date Issued:</strong> {{ invoice.date_issued }}</p>
+                <p><strong>Valid Until:</strong> {{ invoice.valid_until or '-' }}</p>
+                <p><strong>Status:</strong>
+                    {% if invoice.status == 'Draft' %}<span class="badge bg-secondary">Draft</span>
+                    {% elif invoice.status == 'Sent' %}<span class="badge bg-primary">Sent</span>
+                    {% elif invoice.status == 'Accepted' %}<span class="badge bg-success">Accepted</span>
+                    {% elif invoice.status == 'Rejected' %}<span class="badge bg-danger">Rejected</span>
+                    {% elif invoice.status == 'Expired' %}<span class="badge bg-warning">Expired</span>
+                    {% endif %}
+                </p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card mb-4">
+            <div class="card-header"><h5 class="mb-0">Client</h5></div>
+            <div class="card-body">
+                <p><strong>{{ invoice.client.company_name }}</strong></p>
+                <p>{{ invoice.client.address or '' }}</p>
+                <p>{{ invoice.client.city or '' }}{% if invoice.client.city and invoice.client.country %}, {% endif %}{{ invoice.client.country or '' }}</p>
+                <p>{{ invoice.client.email or '' }}</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card mb-4">
+    <div class="card-header"><h5 class="mb-0">Items</h5></div>
+    <div class="card-body">
+        <table class="table table-bordered">
+            <thead class="table-light">
+                <tr>
+                    <th>#</th>
+                    <th>Description</th>
+                    <th class="text-end">Quantity</th>
+                    <th class="text-end">Unit Price</th>
+                    <th class="text-end">Total</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in invoice.items %}
+                <tr>
+                    <td>{{ loop.index }}</td>
+                    <td>{{ item.description }}</td>
+                    <td class="text-end">{{ item.quantity }}</td>
+                    <td class="text-end">{{ "%.2f"|format(item.unit_price) }}</td>
+                    <td class="text-end">{{ "%.2f"|format(item.total) }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+            <tfoot>
+                <tr>
+                    <td colspan="4" class="text-end"><strong>Subtotal</strong></td>
+                    <td class="text-end">{{ "%.2f"|format(invoice.subtotal) }}</td>
+                </tr>
+                <tr>
+                    <td colspan="4" class="text-end"><strong>Tax ({{ invoice.tax_rate }}%)</strong></td>
+                    <td class="text-end">{{ "%.2f"|format(invoice.tax_amount) }}</td>
+                </tr>
+                <tr class="table-dark">
+                    <td colspan="4" class="text-end"><strong>Total</strong></td>
+                    <td class="text-end"><strong>{{ "%.2f"|format(invoice.total) }}</strong></td>
+                </tr>
+            </tfoot>
+        </table>
+    </div>
+</div>
+
+{% if invoice.notes %}
+<div class="card mb-4">
+    <div class="card-header"><h5 class="mb-0">Notes</h5></div>
+    <div class="card-body">{{ invoice.notes }}</div>
+</div>
+{% endif %}
+{% endblock %}
