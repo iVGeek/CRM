@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from app import create_app, db, Client, Product, ProformaInvoice, InvoiceItem, generate_invoice_number
 
 
@@ -133,7 +133,7 @@ class TestProformaInvoice:
     def test_invoice_number_generation(self, app):
         with app.app_context():
             num1 = generate_invoice_number()
-            year = datetime.utcnow().year
+            year = datetime.now(timezone.utc).year
             assert num1 == f'GCS-PI-{year}-0001'
 
             c = Client(company_name='Test')
@@ -143,7 +143,7 @@ class TestProformaInvoice:
             inv = ProformaInvoice(
                 invoice_number=num1,
                 client_id=c.id,
-                date_issued=datetime.utcnow().date(),
+                date_issued=datetime.now(timezone.utc).date(),
             )
             db.session.add(inv)
             db.session.commit()
@@ -153,7 +153,7 @@ class TestProformaInvoice:
 
     def test_invoice_creation(self, client, app):
         cid = self._create_client(app)
-        today = datetime.utcnow().strftime('%Y-%m-%d')
+        today = datetime.now(timezone.utc).strftime('%Y-%m-%d')
         resp = client.post('/proforma-invoices/new', data={
             'client_id': cid,
             'date_issued': today,
@@ -181,7 +181,7 @@ class TestProformaInvoice:
             inv = ProformaInvoice(
                 invoice_number='GCS-PI-2025-9999',
                 client_id=c.id,
-                date_issued=datetime.utcnow().date(),
+                date_issued=datetime.now(timezone.utc).date(),
                 tax_rate=16.0,
             )
             db.session.add(inv)
@@ -222,7 +222,7 @@ class TestProformaInvoice:
             inv = ProformaInvoice(
                 invoice_number='GCS-PI-2025-0001',
                 client_id=cid,
-                date_issued=datetime.utcnow().date(),
+                date_issued=datetime.now(timezone.utc).date(),
             )
             db.session.add(inv)
             db.session.commit()

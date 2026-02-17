@@ -1,5 +1,5 @@
 import os
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from flask import Flask, render_template, request, redirect, url_for, flash
 from flask_sqlalchemy import SQLAlchemy
 from flask_wtf import FlaskForm
@@ -25,7 +25,7 @@ class Client(db.Model):
     address = db.Column(db.String(300))
     city = db.Column(db.String(100))
     country = db.Column(db.String(100))
-    created_at = db.Column(db.DateTime, default=lambda: datetime.utcnow())
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
     contacts = db.relationship('Contact', backref='client', lazy=True, cascade='all, delete-orphan')
     invoices = db.relationship('ProformaInvoice', backref='client', lazy=True)
 
@@ -51,7 +51,7 @@ class ProformaInvoice(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     invoice_number = db.Column(db.String(50), unique=True, nullable=False)
     client_id = db.Column(db.Integer, db.ForeignKey('client.id'), nullable=False)
-    date_issued = db.Column(db.Date, default=lambda: datetime.utcnow().date())
+    date_issued = db.Column(db.Date, default=lambda: datetime.now(timezone.utc).date())
     valid_until = db.Column(db.Date)
     status = db.Column(db.String(20), default='Draft')
     notes = db.Column(db.Text)
@@ -59,7 +59,7 @@ class ProformaInvoice(db.Model):
     tax_rate = db.Column(db.Float, default=16.0)
     tax_amount = db.Column(db.Float, default=0)
     total = db.Column(db.Float, default=0)
-    created_at = db.Column(db.DateTime, default=lambda: datetime.utcnow())
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
     items = db.relationship('InvoiceItem', backref='invoice', lazy=True, cascade='all, delete-orphan')
 
 
@@ -119,7 +119,7 @@ class InvoiceForm(FlaskForm):
 # ---------------------------------------------------------------------------
 
 def generate_invoice_number():
-    year = datetime.utcnow().year
+    year = datetime.now(timezone.utc).year
     prefix = f"GCS-PI-{year}-"
     last = ProformaInvoice.query.filter(
         ProformaInvoice.invoice_number.like(f"{prefix}%")
@@ -373,8 +373,8 @@ def create_app(config=None):
             flash('Proforma invoice created successfully.', 'success')
             return redirect(url_for('invoice_detail', id=invoice.id))
 
-        today = datetime.utcnow().strftime('%Y-%m-%d')
-        valid = (datetime.utcnow() + timedelta(days=30)).strftime('%Y-%m-%d')
+        today = datetime.now(timezone.utc).strftime('%Y-%m-%d')
+        valid = (datetime.now(timezone.utc) + timedelta(days=30)).strftime('%Y-%m-%d')
         return render_template('invoices/form.html', form=form, title='New Proforma Invoice',
                                products=products, today=today, valid=valid)
 
