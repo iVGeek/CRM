@@ -79,8 +79,8 @@ const contactSchema = new mongoose.Schema({
   status: {
     type: String,
     enum: {
-      values: ['lead', 'customer', 'churned'],
-      message: 'Status must be one of: lead, customer, churned'
+      values: ['lead', 'customer', 'churned', 'deleted'],
+      message: 'Status must be one of: lead, customer, churned, deleted'
     },
     default: 'lead'
   },
